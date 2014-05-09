@@ -266,6 +266,30 @@ void free_bitmap(unsigned char* bitmap) {
     free(bitmap);
 }
 
+void center_bitmap(int target_width, int* bitmap_width, int* bitmap_rows, unsigned char** bitmap) {
+    int dst_width = target_width;
+    int dst_rows = *bitmap_rows;
+    unsigned char* dst_bitmap = 0;
+    create_bitmap(dst_width, dst_rows, &dst_bitmap);
+    
+    int offset_x = (dst_width - *bitmap_width) / 2;
+    for (int y = 0; y < dst_rows; ++y) {
+        for (int x = 0; x < dst_width; ++x) {
+            int src_x = x - offset_x;
+            int p = 0;
+            if (src_x >= 0 && src_x < *bitmap_width) {
+                p = get_pixel(*bitmap_width, *bitmap_rows, *bitmap, src_x, y);
+            }
+            set_pixel(dst_width, dst_rows, dst_bitmap, x, y, p);
+        }
+    }
+    
+    free_bitmap(*bitmap);
+    *bitmap = dst_bitmap;
+    *bitmap_width = dst_width;
+    *bitmap_rows = dst_rows;
+}
+
 void debug_output(int bitmap_width,
                   int bitmap_rows,
                   unsigned char* bitmap) {
@@ -448,6 +472,8 @@ int main(int argc, const char * argv[])
         printf("Exit...\n");
         return 1;
     }
+    
+    center_bitmap(384, &bitmap_width, &bitmap_rows, &bitmap);
     
     //debug_output(75, 75, logo);
     //debug_output(135, 135, qrcode);
