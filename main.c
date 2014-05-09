@@ -103,7 +103,7 @@ void python_output(int bitmap_width,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-FT_Error init_font(FT_Library* library, FT_Face* face, FT_Long face_id, char const* filename) {
+FT_Error init_font(FT_Library* library, FT_Face* face, FT_Long face_id, int size, char const* filename) {
     FT_Error error = FT_Init_FreeType(library);
     if (error) {
         printf("Error: Unable to init freetype.\n");
@@ -128,7 +128,7 @@ FT_Error init_font(FT_Library* library, FT_Face* face, FT_Long face_id, char con
     
     error = FT_Set_Char_Size(*face,
                              0,
-                             32*64,
+                             size*64,
                              0,
                              dpi);
     if (error) {
@@ -210,6 +210,7 @@ int main(int argc, const char * argv[])
 {
     FT_ULong charcode = 0;
     FT_Long face_id = 0;
+    int size = 16;
     int error = 0;
     if (argc % 2 != 0) {
         error = 1;
@@ -219,6 +220,8 @@ int main(int argc, const char * argv[])
                 charcode = atoi(argv[i+1]);
             } else if (!strcmp("-f", argv[i])) {
                 face_id = atoi(argv[i+1]);
+            } else if (!strcmp("-s", argv[i])) {
+                size = atoi(argv[i+1]);
             } else {
                 error = 1;
             }
@@ -233,7 +236,7 @@ int main(int argc, const char * argv[])
     FT_Library  library;
     FT_Face face;
     
-    if (init_font(&library, &face, face_id, argv[argc-1])) {
+    if (init_font(&library, &face, face_id, size, argv[argc-1])) {
         printf("Exit...\n");
         return 1;
     }
