@@ -277,38 +277,58 @@ void debug_output(int bitmap_width,
     }
 }
 
+void python_output(int bitmap_width,
+                   int bitmap_rows,
+                   unsigned char* bitmap) {
+    printf("width  = %d\n", bitmap_width);
+    printf("height = %d\n", bitmap_rows);
+    printf("data   = [\n");
+    int bpr = bytes_per_row(bitmap_width);
+    for (int y = 0; y < bitmap_rows; ++y) {
+        printf("  ");
+        for (int x = 0; x < bpr; ++x) {
+            printf("0x%02X", bitmap[y * bpr + x]);
+            if (y < bitmap_rows-1 || x < bpr-1) {
+                printf(",");
+            }
+        }
+        printf("\n");
+    }
+    printf("]");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-FT_Error init_font(FT_Library* library, FT_Face* face) {
+FT_Error init_font(FT_Library* library, FT_Face* face, FT_Long face_id, char const* filename) {
     FT_Error error = FT_Init_FreeType(library);
     if (error) {
-        printf("Error: Unable to init freetype.");
+        printf("Error: Unable to init freetype.\n");
         return error;
     }
-    
-    const char filename[] = "Font.ttf";
     
     error = FT_New_Face(*library,
                         filename,
-                        0,
+                        face_id,
                         face);
     if (error == FT_Err_Unknown_File_Format) {
-        printf("Error: Unsupported font file format.");
+        printf("Error: Unsupported font file format.\n");
         return error;
     } else if (error) {
-        printf("Error: Unable to read font file: '%s'.", filename);
+        printf("Error: Unable to read font file: '%s'.\n", filename);
         return error;
     }
+    
+    (*face)->style_flags |= FT_STYLE_FLAG_ITALIC;
     
     FT_UInt dpi = 384;
     
     error = FT_Set_Char_Size(*face,
                              0,
                              32*64,
-                             dpi,
+                             0,
                              dpi);
     if (error) {
-        printf("Error: Unable to set character size.");
+        printf("Error: Unable to set character size.\n");
         return error;
     }
     
@@ -318,13 +338,13 @@ FT_Error init_font(FT_Library* library, FT_Face* face) {
 FT_Error free_font(FT_Library* library, FT_Face* face) {
     FT_Error error = FT_Done_Face(*face);
     if (error) {
-        printf("Error: Unable to free the face.");
+        printf("Error: Unable to free the face.\n");
         return error;
     }
     
     error = FT_Done_FreeType(*library);
     if (error) {
-        printf("Error: Unable to free freetype library.");
+        printf("Error: Unable to free freetype library.\n");
         return error;
     }
     
@@ -332,7 +352,12 @@ FT_Error free_font(FT_Library* library, FT_Face* face) {
 }
 
 int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int* out_bitmap_rows, unsigned char** out_bitmap) {
-    
+    /*printf("unic: %d\n", FT_ENCODING_UNICODE);
+     for (int i = 0; i < (*face)->num_charmaps; ++i) {
+     printf("charmap: %d\n", i);
+     printf("encoding: %d\n", (*face)->charmaps[i]->encoding);
+     }
+     FT_Set_Charmap(*face, (*face)->charmaps[0]);*/
     
     FT_UInt glyph_index = FT_Get_Char_Index(*face, charcode);
     
@@ -342,7 +367,7 @@ int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int*
                                    glyph_index,
                                    load_flags);
     if (error) {
-        printf("Error: Unable to load glyph.");
+        printf("Error: Unable to load glyph.\n");
         return error;
     }
     
@@ -351,7 +376,7 @@ int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int*
     error = FT_Render_Glyph((*face)->glyph,
                             render_mode);
     if (error) {
-        printf("Error: Unable to render glyph.");
+        printf("Error: Unable to render glyph.\n");
         return error;
     }
     
@@ -375,13 +400,37 @@ int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int*
     return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, const char * argv[])
 {
+    FT_ULong charcode = 0;
+    FT_Long face_id = 0;
+    int error = 0;
+    if (argc % 2 != 0) {
+        error = 1;
+    } else {
+        for (int i = 1; i < argc-1; i+=2) {
+            if (!strcmp("-c", argv[i])) {
+                charcode = atoi(argv[i+1]);
+            } else if (!strcmp("-f", argv[i])) {
+                face_id = atoi(argv[i+1]);
+            } else {
+                error = 1;
+            }
+        }
+    }
+    
+    if (error) {
+        printf("Usage: FontPrinter [-c <charcode>] [-f <face id>] <Font file>\n");
+        return 1;
+    }
+    
     FT_Library  library;
     FT_Face face;
     
-    if (init_font(&library, &face)) {
-        printf("Exit...");
+    if (init_font(&library, &face, face_id, argv[argc-1])) {
+        printf("Exit...\n");
         return 1;
     }
     
@@ -389,22 +438,28 @@ int main(int argc, const char * argv[])
     int bitmap_rows = 0;
     unsigned char* bitmap = 0;
     
-    FT_ULong charcode = '@';
+    
     if (generate_glyph(&face, charcode, &bitmap_width, &bitmap_rows, &bitmap)) {
-        printf("Exit...");
+        printf("Exit...\n");
         return 1;
     }
     
     if (free_font(&library, &face)) {
-        printf("Exit...");
+        printf("Exit...\n");
         return 1;
     }
     
-    debug_output(75, 75, logo);
-    debug_output(135, 135, qrcode);
-    debug_output(bitmap_width, bitmap_rows, bitmap);
+    //debug_output(75, 75, logo);
+    //debug_output(135, 135, qrcode);
+    //debug_output(bitmap_width, bitmap_rows, bitmap);
+    
+    //python_output(75, 75, logo);
+    //python_output(135, 135, qrcode);
+    python_output(bitmap_width, bitmap_rows, bitmap);
     
     free_bitmap(bitmap);
     
     return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
