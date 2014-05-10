@@ -141,21 +141,21 @@ void debug_output(int bitmap_width,
 void python_output(int bitmap_width,
                    int bitmap_rows,
                    unsigned char* bitmap) {
-    printf("width  = %d\n", bitmap_width);
-    printf("height = %d\n", bitmap_rows);
-    printf("data   = [\n");
+    printf("%d,", bitmap_width);
+    printf("%d,", bitmap_rows);
+    //printf("data   = [\n");
     int bpr = bytes_per_row(bitmap_width);
     for (int y = 0; y < bitmap_rows; ++y) {
-        printf("  ");
+        //printf("  ");
         for (int x = 0; x < bpr; ++x) {
-            printf("0x%02X", bitmap[y * bpr + x]);
+            printf("%02X", bitmap[y * bpr + x]);
             if (y < bitmap_rows-1 || x < bpr-1) {
-                printf(",");
+                //printf(",");
             }
         }
-        printf("\n");
+        //printf("\n");
     }
-    printf("]");
+    //printf("]");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,14 +1,8 @@
 #!/usr/bin/python
 
-import os
-from Adafruit_Thermal import *
+import subprocess, time
 
-printer = Adafruit_Thermal("/dev/ttyAMA0", 19200, timeout=5)
-
-os.system("./FontPrinter -s 32 -c 1 -b 20 -d 20 font.otf > ./bitmap.py")
-
-import bitmap as bm
-printer.printBitmap(bm.width, bm.height, bm.data)
-
-printer.setDefault()
+font = "font.otf"
+for c in range(0,5):
+    subprocess.call(["python","print_glyph.py","%d" % (c),"%s" % font])
 
