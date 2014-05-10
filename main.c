@@ -229,7 +229,7 @@ int main(int argc, const char * argv[])
     }
     
     if (error) {
-        printf("Usage: FontPrinter [-c <charcode>] [-f <face id>] <Font file>\n");
+        printf("Usage: FontPrinter [-c <charcode>] [-f <face id>] [-s <size>] <Font file>\n");
         return 1;
     }
     
