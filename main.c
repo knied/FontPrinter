@@ -303,8 +303,8 @@ int main(int argc, const char * argv[])
     
     FT_Library  library;
     FT_Face face;
-    if (init_font(&library, &face, face_id, size, "Font.ttf")) {
-        //if (init_font(&library, &face, face_id, size, argv[argc-1])) {
+    //if (init_font(&library, &face, face_id, size, "Font.ttf")) {
+    if (init_font(&library, &face, face_id, size, argv[argc-1])) {
         printf("Exit...\n");
         return 1;
     }
