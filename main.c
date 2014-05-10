@@ -328,8 +328,8 @@ int main(int argc, const char * argv[])
     translate_bitmap(base_line + bitmap_bottom, &bitmap_width, &bitmap_rows, &bitmap);
     extend_bitmap(0, spacing, &bitmap_width, &bitmap_rows, &bitmap);
     //center_bitmap(384, &bitmap_width, &bitmap_rows, &bitmap);
-    //python_output(bitmap_width, bitmap_rows, bitmap);
-    debug_output(bitmap_width, bitmap_rows, bitmap);
+    python_output(bitmap_width, bitmap_rows, bitmap);
+    //debug_output(bitmap_width, bitmap_rows, bitmap);
     
     free_bitmap(bitmap);
     
