@@ -70,6 +70,63 @@ void center_bitmap(int target_width, int* bitmap_width, int* bitmap_rows, unsign
     *bitmap_rows = dst_rows;
 }
 
+void rotate_bitmap(int* bitmap_width, int* bitmap_rows, unsigned char** bitmap) {
+    int dst_width = *bitmap_rows;
+    int dst_rows = *bitmap_width;
+    unsigned char* dst_bitmap;
+    create_bitmap(dst_width, dst_rows, &dst_bitmap);
+    for (int y = 0; y < dst_rows; ++y) {
+        for (int x = 0; x < dst_width; ++x) {
+            set_pixel(dst_width, dst_rows, dst_bitmap, x, y, get_pixel(*bitmap_width, *bitmap_rows, *bitmap, y, *bitmap_rows - x - 1));
+        }
+    }
+    free_bitmap(*bitmap);
+    *bitmap = dst_bitmap;
+    *bitmap_width = dst_width;
+    *bitmap_rows = dst_rows;
+}
+
+void translate_bitmap(int dx, int* bitmap_width, int* bitmap_rows, unsigned char** bitmap) {
+    int dst_width = *bitmap_width + dx;
+    int dst_rows = *bitmap_rows;
+    unsigned char* dst_bitmap;
+    create_bitmap(dst_width, dst_rows, &dst_bitmap);
+    for (int y = 0; y < dst_rows; ++y) {
+        for (int x = 0; x < dst_width; ++x) {
+            int src_x = x - dx;
+            int p = 0;
+            if (src_x >= 0 && src_x < *bitmap_width) {
+                p = get_pixel(*bitmap_width, *bitmap_rows, *bitmap, src_x, y);
+            }
+            set_pixel(dst_width, dst_rows, dst_bitmap, x, y, p);
+        }
+    }
+    free_bitmap(*bitmap);
+    *bitmap = dst_bitmap;
+    *bitmap_width = dst_width;
+    *bitmap_rows = dst_rows;
+}
+
+void extend_bitmap(int dx, int dy, int* bitmap_width, int* bitmap_rows, unsigned char** bitmap) {
+    int dst_width = *bitmap_width + dx;
+    int dst_rows = *bitmap_rows + dy;
+    unsigned char* dst_bitmap;
+    create_bitmap(dst_width, dst_rows, &dst_bitmap);
+    for (int y = 0; y < dst_rows; ++y) {
+        for (int x = 0; x < dst_width; ++x) {
+            int p = 0;
+            if (x < *bitmap_width && y < *bitmap_rows) {
+                p = get_pixel(*bitmap_width, *bitmap_rows, *bitmap, x, y);
+            }
+            set_pixel(dst_width, dst_rows, dst_bitmap, x, y, p);
+        }
+    }
+    free_bitmap(*bitmap);
+    *bitmap = dst_bitmap;
+    *bitmap_width = dst_width;
+    *bitmap_rows = dst_rows;
+}
+
 void debug_output(int bitmap_width,
                   int bitmap_rows,
                   unsigned char* bitmap) {
@@ -155,7 +212,7 @@ FT_Error free_font(FT_Library* library, FT_Face* face) {
     return 0;
 }
 
-int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int* out_bitmap_rows, unsigned char** out_bitmap) {
+int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int* out_bitmap_rows, unsigned char** out_bitmap, int* out_bitmap_bottom) {
     /*printf("unic: %d\n", FT_ENCODING_UNICODE);
      for (int i = 0; i < (*face)->num_charmaps; ++i) {
      printf("charmap: %d\n", i);
@@ -185,6 +242,11 @@ int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int*
     }
     
     FT_Bitmap* bitmap = &(*face)->glyph->bitmap;
+    //printf("bitmap left: %d\n", (*face)->glyph->bitmap_left);
+    //printf("bitmap top: %d\n", (*face)->glyph->bitmap_top);
+    //printf("bitmap width: %d\n", bitmap->width);
+    //printf("bitmap rows: %d\n", bitmap->rows);
+    *out_bitmap_bottom = (*face)->glyph->bitmap_top - bitmap->rows;
     
     *out_bitmap_width = bitmap->width;
     *out_bitmap_rows = bitmap->rows;
@@ -208,9 +270,11 @@ int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int*
 
 int main(int argc, const char * argv[])
 {
-    FT_ULong charcode = 0;
+    FT_ULong charcode = 'A';
     FT_Long face_id = 0;
-    int size = 16;
+    int size = 8;
+    int base_line = 0;
+    int spacing = 0;
     int error = 0;
     if (argc % 2 != 0) {
         error = 1;
@@ -222,6 +286,10 @@ int main(int argc, const char * argv[])
                 face_id = atoi(argv[i+1]);
             } else if (!strcmp("-s", argv[i])) {
                 size = atoi(argv[i+1]);
+            } else if (!strcmp("-b", argv[i])) {
+                base_line = atoi(argv[i+1]);
+            } else if (!strcmp("-d", argv[i])) {
+                spacing = atoi(argv[i+1]);
             } else {
                 error = 1;
             }
@@ -229,14 +297,14 @@ int main(int argc, const char * argv[])
     }
     
     if (error) {
-        printf("Usage: FontPrinter [-c <charcode>] [-f <face id>] [-s <size>] <Font file>\n");
+        printf("Usage: FontPrinter [-c <charcode>] [-f <face id>] [-s <size>] [-b <base line offset>] [-d <spacing>] <Font file>\n");
         return 1;
     }
     
     FT_Library  library;
     FT_Face face;
-    
-    if (init_font(&library, &face, face_id, size, argv[argc-1])) {
+    if (init_font(&library, &face, face_id, size, "Font.ttf")) {
+        //if (init_font(&library, &face, face_id, size, argv[argc-1])) {
         printf("Exit...\n");
         return 1;
     }
@@ -244,9 +312,9 @@ int main(int argc, const char * argv[])
     int bitmap_width = 0;
     int bitmap_rows = 0;
     unsigned char* bitmap = 0;
+    int bitmap_bottom = 0;
     
-    
-    if (generate_glyph(&face, charcode, &bitmap_width, &bitmap_rows, &bitmap)) {
+    if (generate_glyph(&face, charcode, &bitmap_width, &bitmap_rows, &bitmap, &bitmap_bottom)) {
         printf("Exit...\n");
         return 1;
     }
@@ -256,8 +324,12 @@ int main(int argc, const char * argv[])
         return 1;
     }
     
-    center_bitmap(384, &bitmap_width, &bitmap_rows, &bitmap);
-    python_output(bitmap_width, bitmap_rows, bitmap);
+    rotate_bitmap(&bitmap_width, &bitmap_rows, &bitmap);
+    translate_bitmap(base_line + bitmap_bottom, &bitmap_width, &bitmap_rows, &bitmap);
+    extend_bitmap(0, spacing, &bitmap_width, &bitmap_rows, &bitmap);
+    //center_bitmap(384, &bitmap_width, &bitmap_rows, &bitmap);
+    //python_output(bitmap_width, bitmap_rows, bitmap);
+    debug_output(bitmap_width, bitmap_rows, bitmap);
     
     free_bitmap(bitmap);
     
