@@ -212,7 +212,7 @@ FT_Error free_font(FT_Library* library, FT_Face* face) {
     return 0;
 }
 
-int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int* out_bitmap_rows, unsigned char** out_bitmap, int* out_bitmap_bottom) {
+int generate_glyph(FT_Face* face, FT_UInt glyph_index, int* out_bitmap_width, int* out_bitmap_rows, unsigned char** out_bitmap, int* out_bitmap_bottom) {
     /*printf("unic: %d\n", FT_ENCODING_UNICODE);
      for (int i = 0; i < (*face)->num_charmaps; ++i) {
      printf("charmap: %d\n", i);
@@ -220,7 +220,7 @@ int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int*
      }
      FT_Set_Charmap(*face, (*face)->charmaps[0]);*/
     
-    FT_UInt glyph_index = FT_Get_Char_Index(*face, charcode);
+    //FT_UInt glyph_index = FT_Get_Char_Index(*face, charcode);
     
     FT_Int32 load_flags = 0;
     
@@ -270,8 +270,9 @@ int generate_glyph(FT_Face* face, FT_ULong charcode, int* out_bitmap_width, int*
 
 int main(int argc, const char * argv[])
 {
-    FT_ULong charcode = 'A';
+    //FT_ULong charcode = 'A';
     FT_Long face_id = 0;
+    FT_UInt glyph_index = 0;
     int size = 8;
     int base_line = 0;
     int spacing = 0;
@@ -281,7 +282,7 @@ int main(int argc, const char * argv[])
     } else {
         for (int i = 1; i < argc-1; i+=2) {
             if (!strcmp("-c", argv[i])) {
-                charcode = atoi(argv[i+1]);
+                glyph_index = atoi(argv[i+1]);
             } else if (!strcmp("-f", argv[i])) {
                 face_id = atoi(argv[i+1]);
             } else if (!strcmp("-s", argv[i])) {
@@ -303,7 +304,7 @@ int main(int argc, const char * argv[])
     
     FT_Library  library;
     FT_Face face;
-    //if (init_font(&library, &face, face_id, size, "Font.ttf")) {
+    //if (init_font(&library, &face, face_id, size, "Font.otf")) {
     if (init_font(&library, &face, face_id, size, argv[argc-1])) {
         printf("Exit...\n");
         return 1;
@@ -313,25 +314,23 @@ int main(int argc, const char * argv[])
     int bitmap_rows = 0;
     unsigned char* bitmap = 0;
     int bitmap_bottom = 0;
-    
-    if (generate_glyph(&face, charcode, &bitmap_width, &bitmap_rows, &bitmap, &bitmap_bottom)) {
+    if (generate_glyph(&face, glyph_index, &bitmap_width, &bitmap_rows, &bitmap, &bitmap_bottom)) {
         printf("Exit...\n");
         return 1;
     }
-    
-    if (free_font(&library, &face)) {
-        printf("Exit...\n");
-        return 1;
-    }
-    
     rotate_bitmap(&bitmap_width, &bitmap_rows, &bitmap);
     translate_bitmap(base_line + bitmap_bottom, &bitmap_width, &bitmap_rows, &bitmap);
     extend_bitmap(0, spacing, &bitmap_width, &bitmap_rows, &bitmap);
     //center_bitmap(384, &bitmap_width, &bitmap_rows, &bitmap);
     python_output(bitmap_width, bitmap_rows, bitmap);
     //debug_output(bitmap_width, bitmap_rows, bitmap);
-    
     free_bitmap(bitmap);
+    glyph_index++;
+    
+    if (free_font(&library, &face)) {
+        printf("Exit...\n");
+        return 1;
+    }
     
     return 0;
 }
