@@ -17,12 +17,15 @@ font = "font.otf"
 
 # Called when the program should be reseted
 def reset():
+    global running
+    global glyph_index
     print "Reset."
     running = False
     glyph_index = 0
 
 # Called when button is briefly tapped.
 def tap():
+    global running
     if running == True:
         print "Pause printing."
         running = False
@@ -36,6 +39,7 @@ def hold():
 
 # Called when the next glyph should be printed.
 def print_next():
+    global glyph_index
     if glyph_index < max_glyph_index:
         subprocess.call(["python","print_glyph.py","%d" % (glyph_index),"%s" % font])
     else:
