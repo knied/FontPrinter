@@ -42,6 +42,7 @@ def print_next():
     global glyph_index
     if glyph_index < max_glyph_index:
         subprocess.call(["python","print_glyph.py","%d" % (glyph_index),"%s" % font])
+        glyph_index = glyph_index + 1
     else:
         print "Done."
         reset()
