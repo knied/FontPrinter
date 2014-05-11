@@ -2,19 +2,46 @@
 
 import RPi.GPIO as GPIO
 import subprocess, time
+from Adafruit_Thermal import *
 
 ledPin       = 18
 buttonPin    = 23
 holdTime     = 2     # Duration for button hold (shutdown)
 tapTime      = 0.01  # Debounce time for button taps
 
+next_glyph_time = 5
+running = False
+glyph_index = 0
+max_glyph_index = 436
+font = "font.otf"
+
+# Called when the program should be reseted
+def reset():
+    print "Reset."
+    running = False
+    glyph_index = 0
+
 # Called when button is briefly tapped.
 def tap():
-    print "tab"
+    if running == True:
+        print "Pause printing."
+        running = False
+    else:
+        print "Continue printing."
+        running = True
 
 # Called when button is held down.
 def hold():
-    print "hold"
+    reset()
+
+# Called when the next glyph should be printed.
+def print_next():
+    if glyph_index < max_glyph_index:
+        subprocess.call(["python","print_glyph.py","%d" % (glyph_index),"%s" % font])
+    else:
+        print "Done."
+        reset()
+        
 
 # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
 GPIO.setmode(GPIO.BCM)
@@ -27,6 +54,7 @@ prevTime        = time.time()
 prevButtonState = GPIO.input(buttonPin)
 tapEnable       = False
 holdEnable      = False
+prevPrintTime   = time.time()
 
 while(True):
     # Poll current button state and time
@@ -54,7 +82,12 @@ while(True):
             else:                         # Button pressed
                 tapEnable  = True           # Enable tap and hold actions
                 holdEnable = True
-
+    
+    # Should we print the next glyph?
+    if running == True:
+        if (t - prevPrintTime) >= next_glyph_time:
+            prevPrintTime = t
+            print_next()
     
 #font = "font.otf"
 #for c in range(0,5):
