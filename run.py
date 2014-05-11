@@ -11,17 +11,18 @@ tapTime      = 0.01  # Debounce time for button taps
 
 next_glyph_time = 5
 running = False
-glyph_index = 0
+#glyph_index = 0
 max_glyph_index = 436
-font = "font.otf"
+max_font_index = 16
+#font = "font.otf"
 
 # Called when the program should be reseted
 def reset():
     global running
-    global glyph_index
     print "Reset."
     running = False
-    glyph_index = 0
+    f = open("state.txt", "w")
+    f.write("0 0")
 
 # Called when button is briefly tapped.
 def tap():
@@ -39,10 +40,21 @@ def hold():
 
 # Called when the next glyph should be printed.
 def print_next():
-    global glyph_index
-    if glyph_index < max_glyph_index:
-        subprocess.call(["python","print_glyph.py","%d" % (glyph_index),"%s" % font])
+    f = open("state.txt", "r")
+    content = f.read()
+    f.close()
+    content = content.split(" ")
+    glyph_index = int(content[0])
+    font_index = int(content[1])
+    #global glyph_index
+    if font_index < max_font_index:
+        subprocess.call(["python","print_glyph.py","%d" % (glyph_index),"font%d.otf" % (font_index)])
         glyph_index = glyph_index + 1
+        if glyph_index >= max_glyph_index:
+            glyph_index = 0
+            font_index = font_index + 1
+        f = open("state.txt", "w")
+        f.write("%d %d" % (glyph_index, font_index))
     else:
         print "Done."
         reset()
