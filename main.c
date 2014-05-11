@@ -39,7 +39,13 @@ void set_pixel(int bitmap_width,
 }
 
 void create_bitmap(int bitmap_width, int bitmap_rows, unsigned char** bitmap) {
-    *bitmap = malloc(bytes_per_row(bitmap_width) * bitmap_rows);
+    int bpr = bytes_per_row(bitmap_width);
+    *bitmap = malloc(bpr * bitmap_rows);
+    for (int y = 0; y < bitmap_rows; ++y) {
+        for (int x = 0; x < bpr; ++x) {
+            (*bitmap)[y * bpr + x] = 0;
+        }
+    }
 }
 
 void free_bitmap(unsigned char* bitmap) {
