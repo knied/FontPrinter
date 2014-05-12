@@ -63,7 +63,7 @@ def print_next():
         
 # Check if state file exists
 try:
-    f = open(“state.txt”)
+    f = open("state.txt")
     f.close()
 except IOError:
     reset()
