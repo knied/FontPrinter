@@ -2,6 +2,7 @@
 
 import RPi.GPIO as GPIO
 import subprocess, time
+from time import sleep
 from Adafruit_Thermal import *
 
 ledPin       = 18
