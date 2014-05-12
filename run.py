@@ -90,6 +90,8 @@ holdEnable      = False
 prevPrintTime   = time.time()
 
 while(True):
+    sleep(0.1)
+
     # Poll current button state and time
     buttonState = GPIO.input(buttonPin)
     t           = time.time()
