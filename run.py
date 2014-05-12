@@ -61,6 +61,20 @@ def print_next():
         print "Done."
         reset()
         
+# Check if state file exists
+try:
+    f = open(“state.txt”)
+    f.close()
+except IOError:
+    reset()
+
+# is the state file in a valid form?
+f = open("state.txt", "r")
+content = f.read()
+f.close()
+content = content.split(" ")
+if len(conent) != 2:
+    reset()
 
 # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
 GPIO.setmode(GPIO.BCM)
