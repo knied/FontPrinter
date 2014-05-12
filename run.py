@@ -73,7 +73,7 @@ f = open("state.txt", "r")
 content = f.read()
 f.close()
 content = content.split(" ")
-if len(conent) != 2:
+if len(content) != 2:
     reset()
 
 # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
