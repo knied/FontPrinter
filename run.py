@@ -23,6 +23,7 @@ def reset():
     running = False
     f = open("state.txt", "w")
     f.write("0 0")
+    f.close()
 
 # Called when button is briefly tapped.
 def tap():
@@ -55,6 +56,7 @@ def print_next():
             font_index = font_index + 1
         f = open("state.txt", "w")
         f.write("%d %d" % (glyph_index, font_index))
+        f.close()
     else:
         print "Done."
         reset()
