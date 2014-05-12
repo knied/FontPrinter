@@ -9,7 +9,7 @@ buttonPin    = 23
 holdTime     = 5     # Duration for button hold (shutdown)
 tapTime      = 0.01  # Debounce time for button taps
 
-next_glyph_time = 5
+next_glyph_time = 10
 running = False
 #glyph_index = 0
 max_glyph_index = 436
