@@ -6,7 +6,7 @@ from Adafruit_Thermal import *
 
 ledPin       = 18
 buttonPin    = 23
-holdTime     = 2     # Duration for button hold (shutdown)
+holdTime     = 5     # Duration for button hold (shutdown)
 tapTime      = 0.01  # Debounce time for button taps
 
 next_glyph_time = 5
